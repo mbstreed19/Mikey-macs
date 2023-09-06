@@ -1,39 +1,7 @@
-(defvar elpaca-installer-version 0.5)
-(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-			      :ref nil
-			      :files (:defaults (:exclude "extensions"))
-			      :build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-       (build (expand-file-name "elpaca/" elpaca-builds-directory))
-       (order (cdr elpaca-order))
-       (default-directory repo))
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
-  (unless (file-exists-p repo)
-    (make-directory repo t)
-    (when (< emacs-major-version 28) (require 'subr-x))
-    (condition-case-unless-debug err
-	(if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-		 ((zerop (call-process "git" nil buffer t "clone"
-				       (plist-get order :repo) repo)))
-		 ((zerop (call-process "git" nil buffer t "checkout"
-				       (or (plist-get order :ref) "--"))))
-		 (emacs (concat invocation-directory invocation-name))
-		 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-				       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-		 ((require 'elpaca))
-		 ((elpaca-generate-autoloads "elpaca" repo)))
-	    (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-	  (error "%s" (with-current-buffer buffer (buffer-string))))
-      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-  (unless (require 'elpaca-autoloads nil t)
-    (require 'elpaca)
-    (elpaca-generate-autoloads "elpaca" repo)
-    (load "./elpaca-autoloads")))
-(add-hook 'after-init-hook #'elpaca-process-queues)
-(elpaca `(,@elpaca-order))
+(add-to-list 'load-path "~/.config/emacs/scripts/")
+
+(require 'elpaca-setup)  ;; The Elpaca Package Manager
+(require 'buffer-move)   ;; Buffer-move for better window management
 
 ;; Install use-package support
 (elpaca elpaca-use-package
@@ -97,6 +65,9 @@
     (mikey-macs/leader-keys
       "b" '(:ignore t :wk "buffer")
       "b b" '(switch-to-buffer :wk "Switch buffer")
+      "b c" '(clone-indirect-buffer :wk "Create indirect buffer copy in a split")
+      "b C" '(clone-indirect-buffer-other-window :wk "Clone indirect buffer in new window")
+      "b d" '(bookmark-delete :wk "Delete bookmark")
       "b i" '(ibuffer :wk "Ibuffer")
       "b k" '(kill-this-buffer :wk "Kill this buffer")
       "b n" '(next-buffer :wk "Next buffer")
@@ -126,8 +97,12 @@
     "h" '(:ignore t :wk "Help")
     "h f" '(describe-function :wk "Describe function")
     "h t" '(load-theme :wk "Load Theme")
-    "h v" '(describe-variable :wk "Describe variable")
-    "h r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload emacs config"))
+    "h v" '(describe-variable :wk "Describe variable") 
+    "h r r" '((lambda () (interactive)
+                (load-file "~/.config/emacs/init.el")
+                (ignore (elpaca-process-queues)))
+              :wk "Reload emacs config"))
+
     ;; "h r r" '(reload-init-file :wk "Reload emacs config"))
    (mikey-macs/leader-keys
     "m" '(:ignore t :wk "Org")
@@ -181,74 +156,7 @@
 (use-package all-the-icons-dired
   :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 
-(require 'windmove)
-
-;;;###autoload
-(defun buf-move-up ()
-  "Swap the current buffer and the buffer above the split.
-If there is no split, ie now window above the current one, an
-error is signaled."
-;;  "Switches between the current buffer, and the buffer above the
-;;  split, if possible."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'up))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No window above this one")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-down ()
-"Swap the current buffer and the buffer under the split.
-If there is no split, ie now window under the current one, an
-error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'down))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (or (null other-win) 
-            (string-match "^ \\*Minibuf" (buffer-name (window-buffer other-win))))
-        (error "No window under this one")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-left ()
-"Swap the current buffer and the buffer on the left of the split.
-If there is no split, ie now window on the left of the current
-one, an error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'left))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No left split")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-right ()
-"Swap the current buffer and the buffer on the right of the split.
-If there is no split, ie now window on the right of the current
-one, an error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'right))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No right split")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
+(setq backup-directory-alist '((".*" . "~/.Trash")))
 
 (use-package company
   :defer 2
@@ -387,6 +295,15 @@ one, an error is signaled."
 
 (use-package lua-mode)
 
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1)
+  :config
+  (setq doom-modeline-height 35      ;; sets modeline height
+        doom-modeline-bar-width 5    ;; sets right bar width
+        doom-modeline-persp-name t   ;; adds perspective name to modeline
+        doom-modeline-persp-icon t)) ;; adds folder icon next to persp name
+
 (use-package neotree
   :config
   (setq neo-smart-open t
@@ -479,10 +396,13 @@ one, an error is signaled."
 (use-package doom-themes
   :config
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-      doom-themes-enable-italic t)) ; if nil, italics is universally disabled
-
-
-(load-theme 'doom-one t)
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  ;; Sets the default theme to load!!! 
+  (load-theme 'doom-one t)
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  (doom-themes-neotree-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
 (add-to-list 'default-frame-alist '(alpha-background . 90)) ; For all new frames henceforth
 

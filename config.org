@@ -7,11 +7,12 @@
 
 * Table of Contents :toc:
 - [[#load-these-first][Load these first!!]]
-  - [[#package-manager-elpaca][Package manager (Elpaca)]]
+  - [[#adding-the-scripts-directory-to-path][Adding the scripts directory to path]]
+  - [[#sourcing-the-scripts][Sourcing the scripts]]
   - [[#evil-mode][Evil Mode]]
   - [[#general-keybindings][General Keybindings]]
 - [[#all-the-icons][ALL THE ICONS]]
-- [[#buffer-move][BUFFER-MOVE]]
+- [[#backup][BACKUP]]
 - [[#company][COMPANY]]
 - [[#dashboard][DASHBOARD]]
 - [[#diminish][DIMINISH]]
@@ -24,6 +25,7 @@
   - [[#display-line-numbers-and-truncated-lines][Display Line Numbers and Truncated Lines]]
 - [[#ivy-counsel][IVY (COUNSEL)]]
 - [[#language-support][LANGUAGE SUPPORT]]
+- [[#modeline][MODELINE]]
 - [[#neotree][NEOTREE]]
 - [[#org-mode][ORG MODE]]
   - [[#enabling-table-of-contents][Enabling Table of Contents]]
@@ -42,45 +44,19 @@
 - [[#which-key][WHICH-KEY]]
 
 * Load these first!!
-** Package manager (Elpaca)
+To keep this =config.org= a reasonable length, I have moved a lot of code to individual scripts that will be sourced by this config.  These scripts are found in "~/.config/emacs/scripts" and do not contain any code that most people are likely to need to edit.
+
+** Adding the scripts directory to path
 #+begin_src emacs-lisp
-    (defvar elpaca-installer-version 0.5)
-  (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-  (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-  (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-  (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-				:ref nil
-				:files (:defaults (:exclude "extensions"))
-				:build (:not elpaca--activate-package)))
-  (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-	 (build (expand-file-name "elpaca/" elpaca-builds-directory))
-	 (order (cdr elpaca-order))
-	 (default-directory repo))
-    (add-to-list 'load-path (if (file-exists-p build) build repo))
-    (unless (file-exists-p repo)
-      (make-directory repo t)
-      (when (< emacs-major-version 28) (require 'subr-x))
-      (condition-case-unless-debug err
-	  (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-		   ((zerop (call-process "git" nil buffer t "clone"
-					 (plist-get order :repo) repo)))
-		   ((zerop (call-process "git" nil buffer t "checkout"
-					 (or (plist-get order :ref) "--"))))
-		   (emacs (concat invocation-directory invocation-name))
-		   ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-					 "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-		   ((require 'elpaca))
-		   ((elpaca-generate-autoloads "elpaca" repo)))
-	      (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-	    (error "%s" (with-current-buffer buffer (buffer-string))))
-	((error) (warn "%s" err) (delete-directory repo 'recursive))))
-    (unless (require 'elpaca-autoloads nil t)
-      (require 'elpaca)
-      (elpaca-generate-autoloads "elpaca" repo)
-      (load "./elpaca-autoloads")))
-  (add-hook 'after-init-hook #'elpaca-process-queues)
-  (elpaca `(,@elpaca-order))
+(add-to-list 'load-path "~/.config/emacs/scripts/")
 #+end_src
+
+** Sourcing the scripts
+#+begin_src emacs-lisp
+(require 'elpaca-setup)  ;; The Elpaca Package Manager
+(require 'buffer-move)   ;; Buffer-move for better window management
+#+end_src
+
 
 
 
@@ -155,6 +131,9 @@
     (mikey-macs/leader-keys
       "b" '(:ignore t :wk "buffer")
       "b b" '(switch-to-buffer :wk "Switch buffer")
+      "b c" '(clone-indirect-buffer :wk "Create indirect buffer copy in a split")
+      "b C" '(clone-indirect-buffer-other-window :wk "Clone indirect buffer in new window")
+      "b d" '(bookmark-delete :wk "Delete bookmark")
       "b i" '(ibuffer :wk "Ibuffer")
       "b k" '(kill-this-buffer :wk "Kill this buffer")
       "b n" '(next-buffer :wk "Next buffer")
@@ -184,8 +163,12 @@
     "h" '(:ignore t :wk "Help")
     "h f" '(describe-function :wk "Describe function")
     "h t" '(load-theme :wk "Load Theme")
-    "h v" '(describe-variable :wk "Describe variable")
-    "h r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload emacs config"))
+    "h v" '(describe-variable :wk "Describe variable") 
+    "h r r" '((lambda () (interactive)
+                (load-file "~/.config/emacs/init.el")
+                (ignore (elpaca-process-queues)))
+              :wk "Reload emacs config"))
+
     ;; "h r r" '(reload-init-file :wk "Reload emacs config"))
    (mikey-macs/leader-keys
     "m" '(:ignore t :wk "Org")
@@ -247,80 +230,14 @@ This is an icon set that can be used with dashboard, dired, ibuffer and other Em
   :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 #+end_src
 
-* BUFFER-MOVE
-Creating some functions to allow us to easily move windows (splits) around.  The following block of code was taken from buffer-move.el found on the EmacsWiki:
-https://www.emacswiki.org/emacs/buffer-move.el
+* BACKUP 
+By default, Emacs creates automatic backups of files in their original directories, such "file.el" and the backup "file.el~".  This leads to a lot of clutter, so let's tell Emacs to put all backups that it creates in the =TRASH= directory.
 
 #+begin_src emacs-lisp
-(require 'windmove)
+(setq backup-directory-alist '((".*" . "~/.Trash")))
 
-;;;###autoload
-(defun buf-move-up ()
-  "Swap the current buffer and the buffer above the split.
-If there is no split, ie now window above the current one, an
-error is signaled."
-;;  "Switches between the current buffer, and the buffer above the
-;;  split, if possible."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'up))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No window above this one")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-down ()
-"Swap the current buffer and the buffer under the split.
-If there is no split, ie now window under the current one, an
-error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'down))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (or (null other-win) 
-            (string-match "^ \\*Minibuf" (buffer-name (window-buffer other-win))))
-        (error "No window under this one")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-left ()
-"Swap the current buffer and the buffer on the left of the split.
-If there is no split, ie now window on the left of the current
-one, an error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'left))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No left split")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
-
-;;;###autoload
-(defun buf-move-right ()
-"Swap the current buffer and the buffer on the right of the split.
-If there is no split, ie now window on the right of the current
-one, an error is signaled."
-  (interactive)
-  (let* ((other-win (windmove-find-other-window 'right))
-	 (buf-this-buf (window-buffer (selected-window))))
-    (if (null other-win)
-        (error "No right split")
-      ;; swap top with this one
-      (set-window-buffer (selected-window) (window-buffer other-win))
-      ;; move this one to top
-      (set-window-buffer other-win buf-this-buf)
-      (select-window other-win))))
 #+end_src
+
 
 * COMPANY
 [[https://company-mode.github.io/][Company]] is a text completion framework for Emacs. The name stands for "complete anything".  Completion will start automatically after you type a few letters. Use M-n and M-p to select, <return> to complete or <tab> to complete the common part.
@@ -523,6 +440,22 @@ Emacs has built-in programming language modes for Lisp, Scheme, DSSSL, Ada, ASM,
 
 #+end_src
 
+* MODELINE
+The modeline is the bottom status bar that appears in Emacs windows.  While you can create your own custom modeline, why go to the trouble when Doom Emacs already has a nice modeline package available.  For more information on what is available to configure in the Doom modeline, check out: [[https://github.com/seagle0128/doom-modeline][Doom Modeline]]
+
+#+begin_src emacs-lisp
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1)
+  :config
+  (setq doom-modeline-height 35      ;; sets modeline height
+        doom-modeline-bar-width 5    ;; sets right bar width
+        doom-modeline-persp-name t   ;; adds perspective name to modeline
+        doom-modeline-persp-icon t)) ;; adds folder icon next to persp name
+
+#+end_src
+
+
 * NEOTREE
 Neotree is a file tree viewer.  When you open neotree, it jumps to the current file thanks to neo-smart-open.  The neo-window-fixed-size setting makes the neotree width be adjustable.  NeoTree provides following themes: classic, ascii, arrow, icons, and nerd.  Theme can be configed by setting "two" themes for neo-theme: one for the GUI and one for the terminal.  I like to use 'SPC t' for 'toggle' keybindings, so I have used 'SPC t n' for toggle-neotree.
 
@@ -696,10 +629,14 @@ Vterm is a terminal emulator within Emacs.  The 'shell-file-name' setting sets t
 (use-package doom-themes
   :config
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-      doom-themes-enable-italic t)) ; if nil, italics is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  ;; Sets the default theme to load!!! 
+  (load-theme 'doom-one t)
+  ;; Enable custom neotree theme (all-the-icons must be installed!)
+  (doom-themes-neotree-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
-
-(load-theme 'doom-one t)
 #+end_src
 
 
