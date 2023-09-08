@@ -376,6 +376,8 @@
 
 (use-package lua-mode)
 
+(global-set-key [escape] 'keyboard-escape-quit)
+
 (use-package doom-modeline
   :ensure t
   :init (doom-modeline-mode 1)

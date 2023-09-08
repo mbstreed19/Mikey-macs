@@ -30,6 +30,7 @@
 - [[#highlight-todo][HIGHLIGHT TODO]]
 - [[#ivy-counsel][IVY (COUNSEL)]]
 - [[#language-support][LANGUAGE SUPPORT]]
+- [[#minibuffer-escape][MINIBUFFER ESCAPE]]
 - [[#modeline][MODELINE]]
 - [[#neotree][NEOTREE]]
 - [[#org-mode][ORG MODE]]
@@ -551,6 +552,13 @@ Emacs has built-in programming language modes for Lisp, Scheme, DSSSL, Ada, ASM,
 #+begin_src emacs-lisp
 (use-package lua-mode)
 
+#+end_src
+
+* MINIBUFFER ESCAPE
+By default, Emacs requires you to hit ESC three times to escape quit the minibuffer.  
+
+#+begin_src emacs-lisp
+(global-set-key [escape] 'keyboard-escape-quit)
 #+end_src
 
 * MODELINE
