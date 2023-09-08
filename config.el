@@ -102,13 +102,39 @@
 
    (mikey-macs/leader-keys
     "h" '(:ignore t :wk "Help")
+    "h a" '(counsel-apropos :wk "Apropos")
+    "h b" '(describe-bindings :wk "Describe bindings")
+    "h c" '(describe-char :wk "Describe character under cursor")
+    "h d" '(:ignore t :wk "Emacs documentation")
+    "h d a" '(about-emacs :wk "About Emacs")
+    "h d d" '(view-emacs-debugging :wk "View Emacs debugging")
+    "h d f" '(view-emacs-FAQ :wk "View Emacs FAQ")
+    "h d m" '(info-emacs-manual :wk "The Emacs manual")
+    "h d n" '(view-emacs-news :wk "View Emacs news")
+    "h d o" '(describe-distribution :wk "How to obtain Emacs")
+    "h d p" '(view-emacs-problems :wk "View Emacs problems")
+    "h d t" '(view-emacs-todo :wk "View Emacs todo")
+    "h d w" '(describe-no-warranty :wk "Describe no warranty")
+    "h e" '(view-echo-area-messages :wk "View echo area messages")
     "h f" '(describe-function :wk "Describe function")
-    "h t" '(load-theme :wk "Load Theme")
-    "h v" '(describe-variable :wk "Describe variable") 
+    "h F" '(describe-face :wk "Describe face")
+    "h g" '(describe-gnu-project :wk "Describe GNU Project")
+    "h i" '(info :wk "Info")
+    "h I" '(describe-input-method :wk "Describe input method")
+    "h k" '(describe-key :wk "Describe key")
+    "h l" '(view-lossage :wk "Display recent keystrokes and the commands run")
+    "h L" '(describe-language-environment :wk "Describe language environment")
+    "h m" '(describe-mode :wk "Describe mode")
+    "h r" '(:ignore t :wk "Reload")
     "h r r" '((lambda () (interactive)
                 (load-file "~/.config/emacs/init.el")
                 (ignore (elpaca-process-queues)))
-              :wk "Reload emacs config"))
+              :wk "Reload emacs config")
+    "h t" '(load-theme :wk "Load theme")
+    "h v" '(describe-variable :wk "Describe variable")
+    "h w" '(where-is :wk "Prints keybinding for command if set")
+    "h x" '(describe-command :wk "Display full documentation for command"))
+
 
     ;; "h r r" '(reload-init-file :wk "Reload emacs config"))
    (mikey-macs/leader-keys
@@ -163,7 +189,7 @@
 (use-package all-the-icons-dired
   :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 
-(setq backup-directory-alist '((".*" . "~/.Trash")))
+(setq backup-directory-alist '((".*" . "~/.local/share/Trash/files")))
 
 (use-package company
   :defer 2
