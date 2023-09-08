@@ -17,6 +17,7 @@
 - [[#dashboard][DASHBOARD]]
 - [[#diminish][DIMINISH]]
 - [[#dired][DIRED]]
+- [[#elfeed][ELFEED]]
 - [[#flycheck][FLYCHECK]]
 - [[#fonts][Fonts]]
   - [[#zooming-inout][Zooming In/Out]]
@@ -349,6 +350,30 @@ This package implements hiding or abbreviation of the modeline displays (lighter
 
 #+end_src
 
+* ELFEED
+An RSS newsfeed reader for Emacs.  Move through the articles with 'j/k'.  Move through the stories with 'CTRL j/k' when in other frame.
+
+#+begin_src emacs-lisp
+(use-package elfeed
+  :config
+  (setq elfeed-search-feed-face ":foreground #ffffff :weight bold"
+        elfeed-feeds (quote
+                       (("https://www.reddit.com/r/linux.rss" reddit linux)
+                        ("https://www.reddit.com/r/commandline.rss" reddit commandline)
+                        ("https://www.reddit.com/r/emacs.rss" reddit emacs)
+                        ("https://itsfoss.com/feed/" itsfoss linux)
+                        ("https://distrowatch.com/news/dwd.xml" distrowatch linux)))))
+ 
+
+(use-package elfeed-goodies
+  :init
+  (elfeed-goodies/setup)
+  :config
+  (setq elfeed-goodies/entry-pane-size 0.5))
+
+#+end_src
+
+#+RESULTS:
 
 
 * FLYCHECK

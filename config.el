@@ -248,6 +248,23 @@
     (evil-define-key 'normal peep-dired-mode-map (kbd "k") 'peep-dired-prev-file)
 )
 
+(use-package elfeed
+  :config
+  (setq elfeed-search-feed-face ":foreground #ffffff :weight bold"
+        elfeed-feeds (quote
+                       (("https://www.reddit.com/r/linux.rss" reddit linux)
+                        ("https://www.reddit.com/r/commandline.rss" reddit commandline)
+                        ("https://www.reddit.com/r/emacs.rss" reddit emacs)
+                        ("https://itsfoss.com/feed/" itsfoss linux)
+                        ("https://distrowatch.com/news/dwd.xml" distrowatch linux)))))
+ 
+
+(use-package elfeed-goodies
+  :init
+  (elfeed-goodies/setup)
+  :config
+  (setq elfeed-goodies/entry-pane-size 0.5))
+
 (use-package flycheck
   :ensure t
   :defer t
