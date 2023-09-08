@@ -66,8 +66,6 @@
     (mikey-macs/leader-keys
    "SPC" '(counsel-M-x :wk "Counsel M-x")
    "." '(find-file :wk "Find file")
-   "f c e" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit emacs config")
-   "f r" '(counsel-recentf :wk "Find recent files")
    "TAB TAB" '(comment-line :wk "Comment lines")) 
 
     (mikey-macs/leader-keys
@@ -109,6 +107,49 @@
       "e s" '(eshell :wk "Eshell"))
 
    (mikey-macs/leader-keys
+    "f" '(:ignore t :wk "Files")    
+    "f c e" '((lambda () (interactive)
+              (find-file "~/.config/emacs/config.org")) 
+            :wk "Open emacs config.org")
+    "f e" '((lambda () (interactive)
+              (dired "~/.config/emacs/")) 
+            :wk "Open user-emacs-directory in dired")
+    "f d" '(find-grep-dired :wk "Search for string in files in DIR")
+    "f g" '(counsel-grep-or-swiper :wk "Search for string current file")
+    "f i" '((lambda () (interactive)
+              (find-file "~/.config/emacs/init.el")) 
+            :wk "Open emacs init.el")
+    "f j" '(counsel-file-jump :wk "Jump to a file below current directory")
+    "f l" '(counsel-locate :wk "Locate a file")
+    "f r" '(counsel-recentf :wk "Find recent files")
+    "f u" '(sudo-edit-find-file :wk "Sudo find file")
+    "f U" '(sudo-edit :wk "Sudo edit file"))
+
+   (mikey-macs/leader-keys
+    "g" '(:ignore t :wk "Git")    
+    "g /" '(magit-displatch :wk "Magit dispatch")
+    "g ." '(magit-file-displatch :wk "Magit file dispatch")
+    "g b" '(magit-branch-checkout :wk "Switch branch")
+    "g c" '(:ignore t :wk "Create") 
+    "g c b" '(magit-branch-and-checkout :wk "Create branch and checkout")
+    "g c c" '(magit-commit-create :wk "Create commit")
+    "g c f" '(magit-commit-fixup :wk "Create fixup commit")
+    "g C" '(magit-clone :wk "Clone repo")
+    "g f" '(:ignore t :wk "Find") 
+    "g f c" '(magit-show-commit :wk "Show commit")
+    "g f f" '(magit-find-file :wk "Magit find file")
+    "g f g" '(magit-find-git-config-file :wk "Find gitconfig file")
+    "g F" '(magit-fetch :wk "Git fetch")
+    "g g" '(magit-status :wk "Magit status")
+    "g i" '(magit-init :wk "Initialize git repo")
+    "g l" '(magit-log-buffer-file :wk "Magit buffer log")
+    "g r" '(vc-revert :wk "Git revert file")
+    "g s" '(magit-stage-file :wk "Git stage file")
+    "g t" '(git-timemachine :wk "Git time machine")
+    "g u" '(magit-stage-file :wk "Git unstage file"))
+
+
+   (mikey-macs/leader-keys
     "h" '(:ignore t :wk "Help")
     "h a" '(counsel-apropos :wk "Apropos")
     "h b" '(describe-bindings :wk "Describe bindings")
@@ -142,9 +183,6 @@
     "h v" '(describe-variable :wk "Describe variable")
     "h w" '(where-is :wk "Prints keybinding for command if set")
     "h x" '(describe-command :wk "Display full documentation for command"))
-
-
-    ;; "h r r" '(reload-init-file :wk "Reload emacs config"))
    (mikey-macs/leader-keys
     "m" '(:ignore t :wk "Org")
     "m a" '(org-agenda :wk "Org agenda")
@@ -161,14 +199,35 @@
   (mikey-macs/leader-keys
     "m d" '(:ignore t :wk "Date/deadline")
     "m d t" '(org-time-stamp :wk "Org time stamp"))
+  (mikey-macs/leader-keys
+    "o" '(:ignore t :wk "Open")
+    "o d" '(dashboard-open :wk "Dashboard")
+    "o e" '(elfeed :wk "Elfeed RSS")
+    "o f" '(make-frame :wk "Open buffer in new frame")
+    "o F" '(select-frame-by-name :wk "Select frame by name"))
 
-   (mikey-macs/leader-keys
+  ;; projectile-command-map already has a ton of bindings 
+  ;; set for us, so no need to specify each individually.
+  (mikey-macs/leader-keys
+    "p" '(projectile-command-map :wk "Projectile"))
+
+  (mikey-macs/leader-keys
+    "s" '(:ignore t :wk "Search")
+    "s d" '(dictionary-search :wk "Search dictionary")
+    "s m" '(man :wk "Man pages")
+    "s t" '(tldr :wk "Lookup TLDR docs for a command")
+    "s w" '(woman :wk "Similar to man but doesn't require man"))
+
+  (mikey-macs/leader-keys
     "t" '(:ignore t :wk "Toggle")
+    "t e" '(eshell-toggle :wk "Toggle eshell")
+    "t f" '(flycheck-mode :wk "Toggle flycheck")
     "t l" '(display-line-numbers-mode :wk "Toggle line numbers")
+    "t n" '(neotree-toggle :wk "Toggle neotree file viewer")
+    "t o" '(org-mode :wk "Toggle org mode")
+    "t r" '(rainbow-mode :wk "Toggle rainbow mode")
     "t t" '(visual-line-mode :wk "Toggle truncated lines")
-    "t v" '(vterm-toggle :wk "Toggle Vterm")
-    "t n" '(neotree-toggle :wk "Toggle Neotree"))
-
+    "t v" '(vterm-toggle :wk "Toggle vterm"))
 
   (mikey-macs/leader-keys
     "w" '(:ignore t :wk "Windows")
@@ -514,11 +573,7 @@
                   (reusable-frames . visible)
                   (window-height . 0.3))))
 
-(use-package sudo-edit
-  :config
-    (mikey-macs/leader-keys
-      "fu" '(sudo-edit-find-file :wk "Sudo find file")
-      "fU" '(sudo-edit :wk "Sudo edit file")))
+(use-package sudo-edit)
 
 ;; (add-to-list 'custom-theme-load-path "~/.config/emacs/themes/")
 (use-package doom-themes
