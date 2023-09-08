@@ -532,6 +532,8 @@
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 
+(use-package tldr)
+
 (add-to-list 'default-frame-alist '(alpha-background . 90)) ; For all new frames henceforth
 
 (use-package which-key

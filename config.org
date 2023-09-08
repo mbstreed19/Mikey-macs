@@ -49,6 +49,7 @@
   - [[#vterm-toggle][Vterm-Toggle]]
 - [[#sudo-edit][SUDO EDIT]]
 - [[#theme][THEME]]
+- [[#tldr][TLDR]]
 - [[#transparency][TRANSPARENCY]]
 - [[#which-key][WHICH-KEY]]
 
@@ -826,6 +827,13 @@ Vterm is a terminal emulator within Emacs.  The 'shell-file-name' setting sets t
   (doom-themes-neotree-config)
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
+
+#+end_src
+
+* TLDR
+
+#+begin_src emacs-lisp
+(use-package tldr)
 
 #+end_src
 
